@@ -1,0 +1,47 @@
+The Stroop dataset was obtained from 2020 ABCD Annual Curated Data Release 4.0 (https://nda.nih.gov/study.html?id=1299)
+
+Two modeling approaches to estimating heritability
+
+1) ACE model
+
+Below is the R code for estimating heritbility through aggregation by collapsing the data across trials:
+
+```
+library(mets); dd <- read.table("RT-data.txt", header=T)
+ci <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=mean, data=dd)
+co <- aggregate(RT~subj+zyg+fam+sex+race+age+site, with(ci, data.frame(subj=subj, zyg=zyg, fam=fam,sex=sex,race=race,age=age,site=site,RT=ifelse(cond=="inc",1,-1)*RT, stringsAsFactors = FALSE)), FUN=sum)
+# congruent
+m1 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="con",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+# incongruent
+m2 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+# incongruent vs congruent
+m0 <- twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+```
+
+2) Hierarchical modeling
+
+Below is the R code for estimating heritbility without data aggregation:
+
+```
+library("brms"); dd <- read.table("RT-data.txt", header=T)
+options(mc.cores = parallel::detectCores())
+m <- brm(RT ~ site+sex+race+cond*age+zyg+
+(0+MZ:cond|fam)+(0+DZ:cond|fam)+
+(0+MZ:cond|fam:subj)+(0+DZ:cond|fam:subj),
+family=shifted_lognormal,
+data=dd, chains = 4, iter=1000,
+backend = "cmdstanr", threads = threading(12))
+```
+
+The input data RT-data.txt has a structure as below (`age` was centered around 120 months):
+
+```
+subj site  age sex race fam  zyg cond trl MZ DZ  RT
+s1  site14 -5   M    w   f1  MZ   inc  5   1  0  803
+s1  site14 -5   M    w   f1  MZ   con  7   1  0  835
+s1  site14 -5   M    w   f1  MZ   con  9   1  0  986
+s1  site14 -5   M    w   f1  MZ   con 11   1  0  794
+s1  site14 -5   M    w   f1  MZ   con 13   1  0 1110
+s1  site14 -5   M    w   f1  MZ   inc 15   1  0  919
+...
+```
