@@ -4,7 +4,8 @@ Two modeling approaches to estimating heritability
 
 Below is the R code
 
-`library(mets); data("twinbmi")
+```
+library(mets); data("twinbmi")
 summary(twinlm(bmi ~ zyg+ns(age,3)*gender, data=twinbmi, DZ="DZ", zyg="zyg",
-id="tvparnr", type="ace"))`
-
+id="tvparnr", type="ace"))
+```
