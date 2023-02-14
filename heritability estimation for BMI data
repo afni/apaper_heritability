@@ -9,3 +9,13 @@ library(mets); data("twinbmi")
 summary(twinlm(bmi ~ zyg+ns(age,3)*gender, data=twinbmi, DZ="DZ", zyg="zyg",
 id="tvparnr", type="ace"))
 ```
+
+2) Hierarchical modeling estimation under the Bayesian framework
+
+```
+library("brms"); library(mets); data("twinbmi")
+twinbmi$MZ <- ifelse(twinbmi$zyg=="MZ", 1, 0); twinbmi$DZ <- 1-twinbmi$MZ
+options(mc.cores = parallel::detectCores())
+m <- brm(bf(bmi ~ MZ + gender + s(age,by=gender) + (0+DZ|id) + (0+MZ|id), sigma ~ 0 + zyg),
+data=twinbmi, family=lognormal, chains = 4, iter=1000)
+```
