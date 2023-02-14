@@ -1,0 +1,10 @@
+Two modeling approaches to estimating heritability
+
+1) Conventioinal ACE model
+
+Below is the R code
+
+`library(mets); data("twinbmi")
+summary(twinlm(bmi ~ zyg+ns(age,3)*gender, data=twinbmi, DZ="DZ", zyg="zyg",
+id="tvparnr", type="ace"))`
+
