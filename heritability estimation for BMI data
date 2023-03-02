@@ -2,7 +2,7 @@ Two modeling approaches to estimating heritability
 
 1) Conventioinal ACE model
 
-Below is the R code
+Below is the R code that estimates heritability using the package 'mets'.
 
 ```
 library(mets); data("twinbmi")
@@ -11,6 +11,8 @@ id="tvparnr", type="ace"))
 ```
 
 2) Hierarchical modeling estimation under the Bayesian framework
+
+The R code below requires the packages 'brms' and 'mets'.
 
 ```
 library("brms"); library(mets); data("twinbmi")
