@@ -2,7 +2,7 @@ Two modeling approaches to estimating heritability
 
 1) Conventioinal ACE model
 
-Below is the R code that estimates heritability using the R package 'mets'.
+The R code below estimates heritability using the package 'mets'.
 
 ```
 library(mets); data("twinbmi")
@@ -10,7 +10,7 @@ summary(twinlm(bmi ~ zyg+ns(age,3)*gender, data=twinbmi, DZ="DZ", zyg="zyg",
 id="tvparnr", type="ace"))
 ```
 
-Below is the R code that estimates heritability using the R package 'umx'.
+The R code below estimates heritability using the package 'umx'.
 
 ```
 library(mets); library(umx); data("twinbmi")
