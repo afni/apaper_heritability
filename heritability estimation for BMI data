@@ -2,12 +2,21 @@ Two modeling approaches to estimating heritability
 
 1) Conventioinal ACE model
 
-Below is the R code that estimates heritability using the package 'mets'.
+Below is the R code that estimates heritability using the R package 'mets'.
 
 ```
 library(mets); data("twinbmi")
 summary(twinlm(bmi ~ zyg+ns(age,3)*gender, data=twinbmi, DZ="DZ", zyg="zyg",
 id="tvparnr", type="ace"))
+```
+
+Below is the R code that estimates heritability using the R package 'umx'.
+
+```
+library(mets); library(umx); data("twinbmi")
+d <- reshape(twinbmi[, -6], idvar = c('tvparnr', 'zyg'), timevar = c('num'), direction = "wide")
+names(d)[3:8] <- c('bmi1', 'age1', 'gender1', 'bmi2', 'age2', 'gender2')
+umxACE(selDVs = c("bmi"), sep = "", dzData = d[d$zyg=='DZ',], mzData = d[d$zyg=='MZ',], selCovs=c('age', 'gender'))
 ```
 
 2) Hierarchical modeling estimation under the Bayesian framework
