@@ -18,7 +18,7 @@ m2 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg=
 m0 <- twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 ```
 
-2) Hierarchical modeling
+2) Hierarchical Bayesian modeling through the R package brms
 
 Below is the R code for estimating heritbility without data aggregation:
 
@@ -45,3 +45,22 @@ s1  site14 -5   M    w   f1  MZ   con 13   1  0 1110
 s1  site14 -5   M    w   f1  MZ   inc 15   1  0  919
 ...
 ```
+
+3) Hierarchical modeling through the R package lme4
+
+library(lme4)
+dd <- read.table('RT.E.txt', header=T)
+# congruent 
+m1 <- lmer(log(RT) ~ site+sex+race+age+zyg+(0+MZ|fam)+(0+DZ|fam)+
+           (0+MZ|fam:subj)+(0+DZ|fam:subj), data=dd[dd$c==-0.5,],
+           control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
+# incongruent
+m2 <- lmer(log(RT) ~ site+sex+race+age+zyg+(0+MZ|fam)+(0+DZ|fam)+
+           (0+MZ|fam:subj)+(0+DZ|fam:subj), data=dd[dd$c==0.5,],
+           control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
+# contrast
+mc <- lmer(log(RT) ~ site+sex+race+age+zyg*cond+(0+MZ+MZ:c|fam)+(0+DZ+DZ:c|fam)+
+           (0+MZ+MZ:c|fam:subj)+(0+DZ+DZ:c|fam:subj), data=dd,
+           control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
