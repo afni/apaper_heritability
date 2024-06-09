@@ -11,12 +11,39 @@ library(mets); dd <- read.table("RT-data.txt", header=T)
 ci <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=mean, data=dd)
 co <- aggregate(RT~subj+zyg+fam+sex+race+age+site, with(ci, data.frame(subj=subj, zyg=zyg, fam=fam,sex=sex,race=race,age=age,site=site,RT=ifelse(cond=="inc",1,-1)*RT, stringsAsFactors = FALSE)), FUN=sum)
 # congruent
-twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="con",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+m1 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="con",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 # incongruent
-twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+m2 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 # incongruent vs congruent
-twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+m0 <- twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 ```
+
+## adjusted estimation ##
+# estimating trial-level sampling standard deviation
+tmp <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=sd, data=dd)
+nT  <- 24 # number of trials
+
+# adjusting h^2 for congruent
+summary(m1)$estimate['sd(A)','Estimate']^2 / (summary(m1)$estimate['sd(A)','Estimate']^2 
+      + summary(m1)$estimate['sd(E)','Estimate']^2 - mean(tmp[tmp$cond==1,'RT']^2)/nT)
+# adjusting c^2 for congruent
+summary(m1)$estimate['sd(C)','Estimate']^2 / (summary(m1)$estimate['sd(C)','Estimate']^2 
+      + summary(m1)$estimate['sd(E)','Estimate']^2 - mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
+# adjusting h^2 for incongruent
+summary(m2)$estimate['sd(A)','Estimate']^2 / (summary(m2)$estimate['sd(A)','Estimate']^2 
+      + summary(m2)$estimate['sd(E)','Estimate']^2 - mean(tmp[tmp$cond==2,'RT']^2)/nT)
+# adjusting c^2 for incongruent
+summary(m2)$estimate['sd(C)','Estimate']^2 / (summary(m2)$estimate['sd(C)','Estimate']^2 
+      + summary(m2)$estimate['sd(E)','Estimate']^2 - mean(tmp[tmp$cond==2,'RT']^2)/nT)
+
+# adjusting h^2 for contrast
+summary(m0)$estimate['sd(A)','Estimate']^2 / (summary(m0)$estimate['sd(A)','Estimate']^2 
+      + summary(m0)$estimate['sd(E)','Estimate']^2 - 2*mean(tmp[tmp$cond==1,'RT']^2)/nT)
+# adjusting c^2 for contrast
+summary(m0)$estimate['sd(C)','Estimate']^2 / (summary(m0)$estimate['sd(C)','Estimate']^2 
+      + summary(m0)$estimate['sd(E)','Estimate']^2 - 2*mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
 
 1B) The R code below estimates heritbility using the package 'umx' through aggregation by collapsing the data across trials:
 
