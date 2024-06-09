@@ -4,19 +4,140 @@ Two modeling approaches to estimating heritability
 
 1) ACE model
 
-Below is the R code for estimating heritbility through aggregation by collapsing the data across trials:
+1A) The R code below estimates heritbility using the package 'mets' through aggregation by collapsing the data across trials:
 
 ```
 library(mets); dd <- read.table("RT-data.txt", header=T)
 ci <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=mean, data=dd)
 co <- aggregate(RT~subj+zyg+fam+sex+race+age+site, with(ci, data.frame(subj=subj, zyg=zyg, fam=fam,sex=sex,race=race,age=age,site=site,RT=ifelse(cond=="inc",1,-1)*RT, stringsAsFactors = FALSE)), FUN=sum)
 # congruent
-m1 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="con",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="con",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 # incongruent
-m2 <- twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+twinlm(RT ~ site+sex+race+age+zyg, data=ci[ci$cond=="inc",], DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 # incongruent vs congruent
-m0 <- twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
+twinlm(RT ~ site+sex+race+age+zyg, data=co, DZ="DZ", zyg="zyg", id="fam", type="ace", missing=TRUE)
 ```
+
+1B) The R code below estimates heritbility using the package 'umx' through aggregation by collapsing the data across trials:
+
+```
+library(umx); dd <- read.table("RT-data.txt", header=T)
+ci <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=mean, data=dd)
+co <- aggregate(RT~subj+zyg+fam+sex+race+age+site, with(ci, data.frame(subj=subj, zyg=zyg, fam=fam,sex=sex,race=race,age=age,site=site,RT=ifelse(cond=="inc",1,-1)*RT, stringsAsFactors = FALSE)), FUN=sum)
+
+### congruent ###
+# Convert 'fam' to character to avoid factor level issues
+ci$fam <- as.character(ci$fam)
+
+# Create a twin pair identifier
+ci$pairID <- ave(ci$fam, ci$fam, FUN = function(x) seq_along(x))
+
+# Reshape data to wide format
+ciw <- reshape(ci[ci$cond=='1',-8],
+                   idvar = "fam",
+                   timevar = "pairID",
+                   direction = "wide")
+
+# Rename columns to remove the '.' character
+colnames(ciw) <- gsub("\\.", "_", colnames(ciw))
+
+# Define phenotype and covariates
+phenotype <- "RT"
+covariates <- c("sex", "age", "race", "site")
+
+# Prepare MZ and DZ data
+mzData <- subset(ciw, zyg_1 == "MZ" & zyg_2 == "MZ")
+dzData <- subset(ciw, zyg_1 == "DZ" & zyg_2 == "DZ")
+
+# Define the umxACE model
+aceModel <- umxACE(
+  name = "Twin Study",
+  selDVs = phenotype,
+  selCovs = covariates,
+  mzData = mzData,
+  dzData = dzData,
+  sep = "_"
+)
+
+# Summarize the results
+summary(aceModel)
+
+### incongruent ###
+# Convert 'fam' to character to avoid factor level issues
+ci$fam <- as.character(ci$fam)
+
+# Create a twin pair identifier
+ci$pairID <- ave(ci$fam, ci$fam, FUN = function(x) seq_along(x))
+
+# Reshape data to wide format
+ciw <- reshape(ci[ci$cond=='2',-8],
+                   idvar = "fam",
+                   timevar = "pairID",
+                   direction = "wide")
+
+# Rename columns to remove the '.' character
+colnames(ciw) <- gsub("\\.", "_", colnames(ciw))
+
+# Define phenotype and covariates
+phenotype <- "RT"
+covariates <- c("sex", "age", "race", "site")
+
+# Prepare MZ and DZ data
+mzData <- subset(ciw, zyg_1 == "MZ" & zyg_2 == "MZ")
+dzData <- subset(ciw, zyg_1 == "DZ" & zyg_2 == "DZ")
+
+# Define the umxACE model
+aceModel <- umxACE(
+  name = "Twin Study",
+  selDVs = phenotype,
+  selCovs = covariates,
+  mzData = mzData,
+  dzData = dzData,
+  sep = "_"
+)
+
+# Summarize the results
+summary(aceModel)
+
+
+### contrast between incongruent and congruent ###
+# Convert 'fam' to character to avoid factor level issues
+co$fam <- as.character(co$fam)
+
+# Create a twin pair identifier
+co$pairID <- ave(co$fam, co$fam, FUN = function(x) seq_along(x))
+
+# Reshape data to wide format
+cow <- reshape(co,
+                   idvar = "fam",
+                   timevar = "pairID",
+                   direction = "wide")
+
+# Rename columns to remove the '.' character
+colnames(cow) <- gsub("\\.", "_", colnames(cow))
+
+# Define phenotype and covariates
+phenotype <- "RT"
+covariates <- c("sex", "age", "race", "site")
+
+# Prepare MZ and DZ data
+mzData <- subset(cow, zyg_1 == "MZ" & zyg_2 == "MZ")
+dzData <- subset(cow, zyg_1 == "DZ" & zyg_2 == "DZ")
+
+# Define the umxACE model
+aceModel <- umxACE(
+  name = "Twin Study",
+  selDVs = phenotype,
+  selCovs = covariates,
+  mzData = mzData,
+  dzData = dzData,
+  sep = "_"
+)
+
+# Summarize the results
+summary(aceModel)
+
+
 
 2) Hierarchical Bayesian modeling through the R package brms
 
