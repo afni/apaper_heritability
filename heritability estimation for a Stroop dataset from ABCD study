@@ -89,6 +89,20 @@ aceModel <- umxACE(
 # Summarize the results
 summary(aceModel)
 
+## adjusted estimation ##
+# estimating trial-level sampling standard deviation
+tmp <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=sd, data=dd)
+nT  <- 24 # number of trials
+
+# corrected h^2 for bias
+aceModel$top$matrices$a$values^2 / (aceModel$top$matrices$a$values^2 + aceModel$top$matrices$e$values^2
+                                  - mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
+# corrected h^2 for bias
+aceModel$top$matrices$c$values^2 / (aceModel$top$matrices$c$values^2 + aceModel$top$matrices$e$values^2
+                                  - mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
+
 ### incongruent ###
 # Convert 'fam' to character to avoid factor level issues
 ci$fam <- as.character(ci$fam)
@@ -125,6 +139,19 @@ aceModel <- umxACE(
 
 # Summarize the results
 summary(aceModel)
+
+## adjusted estimation ##
+# estimating trial-level sampling standard deviation
+tmp <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=sd, data=dd)
+nT  <- 24 # number of trials
+
+# corrected h^2 for bias
+aceModel$top$matrices$a$values^2 / (aceModel$top$matrices$a$values^2 + aceModel$top$matrices$e$values^2
+                                  - mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
+# corrected h^2 for bias
+aceModel$top$matrices$c$values^2 / (aceModel$top$matrices$c$values^2 + aceModel$top$matrices$e$values^2
+                                  - mean(tmp[tmp$cond==1,'RT']^2)/nT)
 
 
 ### contrast between incongruent and congruent ###
@@ -164,6 +191,18 @@ aceModel <- umxACE(
 # Summarize the results
 summary(aceModel)
 
+## adjusted estimation ##
+# estimating trial-level sampling standard deviation
+tmp <- aggregate(RT~subj+zyg+fam+sex+race+age+site+cond, FUN=sd, data=dd)
+nT  <- 24 # number of trials
+
+# corrected h^2 for bias
+aceModel$top$matrices$a$values^2 / (aceModel$top$matrices$a$values^2 + aceModel$top$matrices$e$values^2
+                                  - 2*mean(tmp[tmp$cond==1,'RT']^2)/nT)
+
+# corrected h^2 for bias
+aceModel$top$matrices$c$values^2 / (aceModel$top$matrices$c$values^2 + aceModel$top$matrices$e$values^2
+                                  - 2*mean(tmp[tmp$cond==1,'RT']^2)/nT)
 
 
 2) Hierarchical Bayesian modeling through the R package brms
